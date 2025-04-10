@@ -8,39 +8,37 @@ import speech_recognition as sr
 from flask_cors import CORS
 
 app = Flask(__name__)
-client = MongoClient('mongodb://localhost:27017/')
-db = client['AI-BOT']
-questions_collection = db['questions']
 CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
-# Load predefined questions (fix: exclude _id from MongoDB)
-data = {'questions': list(questions_collection.find({}, {'_id': 0}))}
-
-# Text-to-speech setup with reinitialization
-def get_engine():
-    engine = pyttsx3.init()
-    engine.stop()  # Clear any existing run loop
-    return engine
+# Try MongoDB, fallback to JSON
+try:
+    client = MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=5000)
+    db = client['AI-BOT']
+    questions_collection = db['questions']
+    data = {'questions': list(questions_collection.find({}, {'_id': 0}))}
+    print("Connected to MongoDB")
+except Exception as e:
+    print(f"MongoDB failed: {e}. Falling back to questions.json")
+    with open('questions.json', 'r') as f:
+        data = json.load(f)
 
 @app.route('/chat', methods=['POST'])
 def chat():
     user_input = request.json.get('input').lower()
     response = "I don’t know that one, bro!"
-    engine = get_engine()  # Fresh engine instance
+    matched_question = None
 
     # Check predefined questions
     for item in data['questions']:
         if user_input in item['question'].lower():
-            response = item['answer']['basic']
-            engine.say(response)
-            engine.runAndWait()
-            print(f"Predefined response: {response}")
-            return jsonify({'response': response})
+            matched_question = item
+            response = "Question found! What’s your level?"
+            return jsonify({'response': response, 'levels': ['beginner', 'medium', 'advanced'], 'question': item})
 
-    # Fallback to xAI API (Note: You’re using Groq, not xAI—fix if needed)
+    # Fallback to Groq API
     headers = {'Authorization': f'Bearer {XAI_API_KEY}', 'Content-Type': 'application/json'}
     payload = {
-        'model': 'llama-3.3-70b-versatile',  # Groq model
+        'model': 'llama-3.3-70b-versatile',
         'messages': [{'role': 'user', 'content': user_input}]
     }
     try:
@@ -48,9 +46,10 @@ def chat():
         print(f"API Status: {api_response.status_code}, Response: {api_response.text}")
         if api_response.status_code == 200:
             response = api_response.json()['choices'][0]['message']['content']
-            engine.say(response)
-            engine.runAndWait()
-            print(f"API response: {response}")
+            return jsonify({
+                'response': "Training data not found, but don’t worry—I’ve got you covered!",
+                'answer': response
+            })
         else:
             response = f"API errored out with status {api_response.status_code}"
     except requests.RequestException as e:
