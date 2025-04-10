@@ -1,0 +1,24 @@
+{
+    "questions": [
+      {
+        "question": "What is gravity?",
+        "level_test": [
+          "Do you know what keeps us on the ground?",
+          "Have you heard of Newton?",
+          "Can you explain force?"
+        ],
+        "answer": {
+          "basic": "Gravity is what pulls things down to Earth!",
+          "intermediate": "Gravity is a force that attracts objects toward each other.",
+          "advanced": "Gravity is the curvature of spacetime caused by mass, as per Einstein."
+        },
+        "suggestion": {
+          "basic": "Think of it like a ball rolling down a hill!",
+          "intermediate": "Explain it to a friend as an invisible tug.",
+          "advanced": "Use a rubber sheet analogy for spacetime."
+        },
+        "joke": "Why don’t skeletons fight? They don’t have the guts—or gravity!"
+      }
+      
+    ]
+  }
