@@ -1,0 +1,7 @@
+hackathon-chatbot/
+├── venv/                # Virtual environment folder
+├── static/              # Frontend files (React builds go here later)
+├── templates/           # HTML templates (if needed)
+├── app.py               # Main backend file
+├── questions.json       # Predefined questions/answers (Girl 1’s work)
+└── config.py            # Configuration (e.g., API keys)

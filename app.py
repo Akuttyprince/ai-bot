@@ -1,23 +1,32 @@
 from flask import Flask, request, jsonify
+from pymongo import MongoClient
 import pyttsx3
 import json
 import requests
 from config import XAI_API_KEY
 import speech_recognition as sr
+from flask_cors import CORS
 
 app = Flask(__name__)
+client = MongoClient('mongodb://localhost:27017/')
+db = client['AI-BOT']
+questions_collection = db['questions']
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
-# Load predefined questions
-with open('questions.json', 'r') as f:
-    data = json.load(f)
+# Load predefined questions (fix: exclude _id from MongoDB)
+data = {'questions': list(questions_collection.find({}, {'_id': 0}))}
 
-# Text-to-speech setup
-engine = pyttsx3.init()
+# Text-to-speech setup with reinitialization
+def get_engine():
+    engine = pyttsx3.init()
+    engine.stop()  # Clear any existing run loop
+    return engine
 
 @app.route('/chat', methods=['POST'])
 def chat():
     user_input = request.json.get('input').lower()
     response = "I don’t know that one, bro!"
+    engine = get_engine()  # Fresh engine instance
 
     # Check predefined questions
     for item in data['questions']:
@@ -28,10 +37,10 @@ def chat():
             print(f"Predefined response: {response}")
             return jsonify({'response': response})
 
-    # Fallback to xAI API
+    # Fallback to xAI API (Note: You’re using Groq, not xAI—fix if needed)
     headers = {'Authorization': f'Bearer {XAI_API_KEY}', 'Content-Type': 'application/json'}
     payload = {
-        'model': 'llama-3.3-70b-versatile',  # Replace with your actual model
+        'model': 'llama-3.3-70b-versatile',  # Groq model
         'messages': [{'role': 'user', 'content': user_input}]
     }
     try:
@@ -48,7 +57,6 @@ def chat():
         response = f"API’s down, dude! Error: {str(e)}"
         print(response)
 
-    # Ensure response is sent
     return jsonify({'response': response})
 
 @app.route('/voice_input', methods=['POST'])
