@@ -1,0 +1,5 @@
+Flask
+requests
+pyttsx3
+pymongo
+speechrecognition

@@ -15,9 +15,11 @@ CORS(app, resources={
     r"/get_history": {"origins": "http://localhost:5173"}
 })
 
+# Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# Try MongoDB, fallback to JSON
 try:
     client = MongoClient('mongodb://localhost:27017/', serverSelectionTimeoutMS=5000)
     db = client['AI-BOT']
@@ -70,6 +72,7 @@ def voice_input():
         recognizer = sr.Recognizer()
         logger.info("Initializing microphone...")
         
+        # List available mics for debugging
         mic_list = sr.Microphone.list_microphone_names()
         logger.debug(f"Available microphones: {mic_list}")
         if not mic_list:

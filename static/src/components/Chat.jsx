@@ -9,24 +9,24 @@ const Chat = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const navigate = useNavigate();
 
+  // Base URL - swap with your public backend URL after Step 2
+  const API_BASE_URL = 'http://localhost:5000'; // Replace with ngrok URL later
+
   const sendMessage = async () => {
     if (!input) return;
 
     try {
-      const res = await fetch('http://localhost:5000/chat', {
+      const res = await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input }),
       });
       const data = await res.json();
-      console.log('Chat response:', data);
 
-      await fetch('http://localhost:5000/save_history', {
+      await fetch(`${API_BASE_URL}/save_history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: input, response: data.response || data.answer }),
-      }).then((res) => res.json()).then((historyData) => {
-        console.log('History save:', historyData);
       });
 
       if (data.levels) {
@@ -46,21 +46,18 @@ const Chat = () => {
       setInput('');
     } catch (error) {
       console.error('Chat error:', error);
-      setResponse('Oops, something broke, bro!');
+      setResponse('Oops, something broke, bro! Check your connection.');
     }
   };
 
   const handleVoiceInput = async () => {
     setResponse('Listening... Speak now!');
     try {
-      const res = await fetch('http://localhost:5000/voice_input', {
+      const res = await fetch(`${API_BASE_URL}/voice_input`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
       });
       const data = await res.json();
-      console.log('Voice input:', data);
-
       if (data.input) {
         setInput(data.input);
         setResponse(`Heard: "${data.input}"—hit Send to ask!`);
@@ -69,7 +66,7 @@ const Chat = () => {
       }
     } catch (error) {
       console.error('Voice error:', error);
-      setResponse('Mic’s acting up, bro! Check your setup.');
+      setResponse('Mic’s acting up, bro! Try again.');
     }
   };
 
@@ -151,4 +148,4 @@ const Chat = () => {
   );
 };
 
-export default Chat;    
+export default Chat;
